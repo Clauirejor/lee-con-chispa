@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lee con Chispa">
+<meta name="theme-color" content="#2b1d5c">
+<title>Lee con Chispa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#2b1d5c;--card:#fffaf0;--ink:#2a2140;--acc:#ff8a3d;--ok:#3ccf7a;--bad:#ff5a6a;--gold:#ffd23f;--soft:#e9e2ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;background:radial-gradient(circle at 50% 0,#4b36a0,var(--bg) 70%);color:#fff;font-family:Andika,"Comic Sans MS",system-ui,sans-serif;overflow:hidden}
+button{font-family:inherit;border:0;cursor:pointer}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;padding:calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 10px)}
+.screen.on{display:flex}
+.print{font-family:Andika,system-ui,sans-serif;font-weight:700;letter-spacing:.04em}
+.ligada{font-family:"Dancing Script",cursive;font-weight:700}
+
+/* MAPA */
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.title{font-size:clamp(26px,5vw,40px);font-weight:700;text-shadow:0 3px 0 #1a1040}
+.gear{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.12);font-size:28px;color:#fff;position:relative}
+.gear svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.gear circle{fill:none;stroke:var(--gold);stroke-width:5;stroke-dasharray:166;stroke-dashoffset:166}
+.gear.hold circle{transition:stroke-dashoffset 1.5s linear;stroke-dashoffset:0}
+.map{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 0 40px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.node{position:relative;width:min(92vw,420px);display:flex;align-items:center;gap:16px}
+.node:nth-child(odd){justify-content:flex-start;padding-left:8%}
+.node:nth-child(even){justify-content:flex-end;padding-right:8%;flex-direction:row-reverse}
+.lvl{width:104px;height:104px;border-radius:28px;background:linear-gradient(#ffb066,var(--acc));box-shadow:0 8px 0 #b8541a,0 12px 20px rgba(0,0,0,.35);font-size:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;flex:none}
+.lvl.done{background:linear-gradient(#7cf0a8,var(--ok));box-shadow:0 8px 0 #1f8a4f,0 12px 20px rgba(0,0,0,.35)}
+.lvl.lock{background:#5c4f8a;box-shadow:0 8px 0 #3a2f63;filter:grayscale(.6);font-size:36px}
+.lvl small{font-size:15px;letter-spacing:2px;margin-top:2px}
+.nlabel{font-size:20px;font-weight:700;text-shadow:0 2px 0 #1a1040;max-width:170px}
+.chispa{font-size:46px;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+
+/* SESIÓN */
+.bar{display:flex;align-items:center;gap:12px}
+.ibtn{width:60px;height:60px;border-radius:18px;background:rgba(255,255,255,.15);color:#fff;font-size:30px;flex:none}
+.ibtn.on{background:var(--gold);color:var(--ink)}
+.prog{flex:1;height:20px;border-radius:10px;background:rgba(255,255,255,.15);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--acc));transition:width .4s}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;overflow:auto;padding:10px 0}
+.big{background:var(--card);color:var(--ink);border-radius:32px;padding:10px 40px;font-size:clamp(80px,18vw,160px);line-height:1.15;box-shadow:0 10px 0 #d8cdb0;min-width:200px;text-align:center}
+.big.sm{font-size:clamp(48px,10vw,96px)}
+.big .ligada{font-size:1.1em}
+.emoji{font-size:clamp(90px,20vw,160px);line-height:1}
+.row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.chip{background:var(--soft);color:var(--ink);border-radius:22px;padding:6px 26px;font-size:clamp(48px,10vw,84px);box-shadow:0 7px 0 #b9acf0}
+.chip:active,.big:active,.opt:active{transform:translateY(4px)}
+.chip.lit{background:var(--gold);box-shadow:0 7px 0 #c49a00}
+.mouths{display:flex;align-items:center;gap:10px;min-height:150px}
+.mouth{display:flex;flex-direction:column;align-items:center;font-size:16px;color:var(--soft);text-align:center;max-width:140px}
+.mouth svg{width:120px;height:120px}
+.arrow{font-size:34px;opacity:.7}
+.btn{background:var(--acc);color:#fff;border-radius:24px;padding:16px 30px;font-size:28px;font-weight:700;box-shadow:0 7px 0 #b8541a}
+.btn.alt{background:rgba(255,255,255,.18);box-shadow:0 7px 0 rgba(0,0,0,.25)}
+.btn:active{transform:translateY(4px);box-shadow:0 3px 0 #b8541a}
+.count{opacity:.7;font-size:20px}
+.ear{width:150px;height:150px;border-radius:50%;background:var(--gold);color:var(--ink);font-size:80px;box-shadow:0 9px 0 #c49a00}
+.ear:active{transform:translateY(5px)}
+.opts{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;width:100%}
+.opt{background:var(--card);color:var(--ink);border-radius:28px;min-width:min(42vw,200px);min-height:150px;padding:10px 24px;font-size:clamp(56px,11vw,100px);box-shadow:0 9px 0 #d8cdb0;transition:opacity .3s,transform .1s}
+.opt.emo{font-size:clamp(72px,14vw,120px)}
+.opt.ok{background:var(--ok);box-shadow:0 9px 0 #1f8a4f;color:#fff}
+.opt.bad{animation:shake .4s}
+.opt.off{opacity:.25;pointer-events:none}
+@keyframes shake{20%,60%{transform:translateX(-12px)}40%,80%{transform:translateX(12px)}}
+.mirror{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);width:170px;height:170px;border-radius:50%;object-fit:cover;transform:scaleX(-1);border:6px solid var(--gold);display:none;z-index:20;background:#000}
+.mirror.on{display:block}
+.party{position:fixed;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;z-index:30}
+.party span{position:absolute;font-size:44px;animation:fly 1.1s ease-out forwards}
+@keyframes fly{from{transform:translate(0,0) scale(.4);opacity:1}to{transform:translate(var(--x),var(--y)) scale(1.3);opacity:0}}
+.stars{font-size:80px;letter-spacing:8px}
+
+/* ADULTO */
+#adult{background:#f4f1fb;color:var(--ink);overflow-y:auto;-webkit-overflow-scrolling:touch;user-select:text}
+#adult h2{margin:6px 0 4px}#adult h3{margin:22px 0 6px;color:#5b3fc4}
+.box{background:#fff;border-radius:16px;padding:14px;margin:8px 0;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{padding:12px 18px;border-radius:12px;background:#e9e4f7;font-size:18px;color:var(--ink)}
+.seg button.on{background:#5b3fc4;color:#fff}
+.rec{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #eee}
+.rec b{flex:1;font-size:22px}
+.rec button{width:48px;height:48px;border-radius:12px;background:#e9e4f7;font-size:20px}
+.rec button.r{background:#ffe1e4}.rec button.r.live{background:var(--bad);color:#fff;animation:pulse 1s infinite}
+.rec .has{color:var(--ok);font-size:14px}
+@keyframes pulse{50%{opacity:.5}}
+.note{font-size:15px;color:#6a6280;line-height:1.4}
+</style>
+</head>
+<body>
+
+<!-- MAPA -->
+<section id="map" class="screen on">
+  <div class="top">
+    <div class="title">🐉 Lee con Chispa</div>
+    <button class="gear" id="gear" aria-label="Zona de adultos (mantén pulsado)">⚙️<svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="26"/></svg></button>
+  </div>
+  <div class="map" id="mapList"></div>
+</section>
+
+<!-- SESIÓN -->
+<section id="play" class="screen">
+  <div class="bar">
+    <button class="ibtn" id="back">⬅</button>
+    <div class="prog"><i id="progFill"></i></div>
+    <button class="ibtn" id="mirrorBtn" title="Espejo">🪞</button>
+  </div>
+  <div class="stage" id="stage"></div>
+</section>
+
+<!-- ADULTO -->
+<section id="adult" class="screen">
+  <div class="top"><h2>Zona de papá y mamá</h2><button class="btn" id="adultClose" style="font-size:20px;padding:10px 20px">Cerrar</button></div>
+  <div id="adultBody"></div>
+</section>
+
+<video class="mirror" id="mirror" playsinline autoplay muted></video>
+<div class="party" id="party"></div>
+
+<script>
+/* ===================== CONTENIDO ===================== */
+const W=(w,s,e)=>({w,s,e});
+const LEVELS=[
+ {id:'vocales',name:'Vocales',type:'sonidos',icon:'🌋',opts:2,items:['a','e','i','o','u']},
+ {id:'m',name:'Con M',type:'sonidos',icon:'🍄',items:['ma','me','mi','mo','mu']},
+ {id:'p',name:'Con P',type:'sonidos',icon:'🍐',items:['pa','pe','pi','po','pu']},
+ {id:'mp',name:'Palabras M y P',type:'palabras',icon:'🏰',items:[W('mamá',['ma','má'],'👩'),W('papá',['pa','pá'],'👨'),W('mapa',['ma','pa'],'🗺️'),W('puma',['pu','ma'],'🐆'),W('pipa',['pi','pa'],'🌻'),W('mimo',['mi','mo'],'🤗')]},
+ {id:'l',name:'Con L',type:'sonidos',icon:'🌙',items:['la','le','li','lo','lu']},
+ {id:'lw',name:'Palabras con L',type:'palabras',icon:'🏝️',items:[W('lupa',['lu','pa'],'🔍'),W('lima',['li','ma'],'🍋'),W('ola',['o','la'],'🌊'),W('pelo',['pe','lo'],'💇'),W('paloma',['pa','lo','ma'],'🕊️'),W('palo',['pa','lo'],'🪵')]},
+ {id:'s',name:'Con S',type:'sonidos',icon:'🐍',items:['sa','se','si','so','su']},
+ {id:'sw',name:'Palabras con S',type:'palabras',icon:'🌲',items:[W('sapo',['sa','po'],'🐸'),W('oso',['o','so'],'🐻'),W('sopa',['so','pa'],'🍲'),W('suma',['su','ma'],'➕'),W('piso',['pi','so'],'🏢'),W('peso',['pe','so'],'⚖️')]},
+ {id:'t',name:'Con T',type:'sonidos',icon:'⛺',items:['ta','te','ti','to','tu']},
+ {id:'tw',name:'Palabras con T',type:'palabras',icon:'🚀',items:[W('pato',['pa','to'],'🦆'),W('moto',['mo','to'],'🏍️'),W('tomate',['to','ma','te'],'🍅'),W('maleta',['ma','le','ta'],'🧳'),W('patata',['pa','ta','ta'],'🥔'),W('tele',['te','le'],'📺')]},
+ {id:'frases',name:'Frases',type:'frases',icon:'🐉',items:[W('el oso',null,'🐻'),W('la moto',null,'🏍️'),W('mi pato',null,'🦆'),W('la sopa',null,'🍲'),W('el tomate',null,'🍅'),W('la ola',null,'🌊'),W('el sapo',null,'🐸'),W('papá y mamá',null,'👨👩')]}
+];
+LEVELS.forEach(L=>L.items=L.items.map(x=>typeof x==='string'?{w:x}:x));
+const FX={'fx:bien1':'¡Muy bien!','fx:bien2':'¡Genial!','fx:bien3':'¡Bravo!','fx:otra':'Otra vez','fx:fin':'¡Lo has conseguido!'};
+const HINT={a:'Boca muy abierta',e:'Sonrisa abierta',i:'Sonrisa grande',o:'Boca redonda',u:'Labios hacia delante',m:'Labios cerrados… mmm',p:'Labios cerrados y ¡pop!',l:'Lengua arriba',s:'Dientes juntos… sss',t:'Lengua tras los dientes'};
+
+/* ===================== ESTADO ===================== */
+const KEY='chispa_v1';
+let P=Object.assign({stars:{},mode:'upper',unlockAll:false,rate:0.8},JSON.parse(localStorage.getItem(KEY)||'{}'));
+const save=()=>localStorage.setItem(KEY,JSON.stringify(P));
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const plain=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const T=w=>P.mode==='lower'?`<span class="ligada">${w}</span>`:`<span class="print">${w.toUpperCase()}</span>`;
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
+
+/* ===================== AUDIO ===================== */
+const DB={db:null,
+ open(){return new Promise(r=>{try{const q=indexedDB.open('chispa',1);q.onupgradeneeded=()=>q.result.createObjectStore('audios');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
+ tx(mode){return this.db.transaction('audios',mode).objectStore('audios')},
+ put(k,b){return new Promise(r=>{if(!this.db)return r();const s=this.tx('readwrite');s.put(b,k);s.transaction.oncomplete=r;s.transaction.onerror=r})},
+ del(k){return new Promise(r=>{if(!this.db)return r();const s=this.tx('readwrite');s.delete(k);s.transaction.oncomplete=r;s.transaction.onerror=r})},
+ all(){return new Promise(r=>{const out={};if(!this.db)return r(out);const c=this.tx('readonly').openCursor();c.onsuccess=()=>{const x=c.result;if(x){out[x.key]=x.value;x.continue()}else r(out)};c.onerror=()=>r(out)})}
+};
+const REC={};
+let voice=null,curAudio=null;
+function pickVoice(){const vs=speechSynthesis.getVoices();voice=vs.find(v=>v.lang==='es-ES'&&/m[oó]nica|paulina|helena|lucia/i.test(v.name))||vs.find(v=>v.lang==='es-ES')||vs.find(v=>v.lang.startsWith('es'))||null}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function stopAll(){if(curAudio){curAudio.pause();curAudio=null}if('speechSynthesis' in window)speechSynthesis.cancel()}
+function speak(t){return new Promise(res=>{if(!('speechSynthesis' in window))return res();const u=new SpeechSynthesisUtterance(t);u.lang='es-ES';if(voice)u.voice=voice;u.rate=P.rate;u.onend=res;u.onerror=res;speechSynthesis.speak(u);setTimeout(res,4500)})}
+/* Prioridad: tu grabación > audio/<nombre>.m4a > audio/<nombre>.mp3 del repo > voz del iPad */
+const slug=k=>k.startsWith('fx:')?k.replace(':','-'):plain(k).replace(/ /g,'-')+(/[áéíóú]/.test(k)?'-tilde':'');
+const MISS=new Set();
+function playUrl(u){return new Promise((ok,ko)=>{const a=new Audio(u);curAudio=a;a.onended=ok;a.onerror=()=>ko('missing');a.play().catch(()=>ko('blocked'))})}
+async function playRepo(key){
+ for(const ext of ['m4a','mp3']){
+  const id=key+'|'+ext;if(MISS.has(id))continue;
+  try{await playUrl('audio/'+slug(key)+'.'+ext);return true}
+  catch(why){if(why==='missing')MISS.add(id);else return false}
+ }
+ return false;
+}
+function say(key,text){
+ stopAll();const t=text||FX[key]||key;const cap=new Promise(r=>setTimeout(r,6000));
+ const run=REC[key]?playUrl(REC[key]).catch(()=>speak(t)):playRepo(key).then(ok=>ok||speak(t));
+ return Promise.race([run,cap]);
+}
+const sayFx=k=>say(k,FX[k]);
+const praise=()=>sayFx('fx:bien'+(1+Math.floor(Math.random()*3)));
+
+/* ===================== BOCAS ===================== */
+function mouth(k){
+ const L='#d9536b',D='#5a1530',G='#ff8fa3',W='#fff';let m='';
+ switch(k){
+  case 'a':m=`<ellipse cx="60" cy="80" rx="20" ry="19" fill="${D}" stroke="${L}" stroke-width="6"/><ellipse cx="60" cy="91" rx="11" ry="6" fill="${G}"/>`;break;
+  case 'e':m=`<ellipse cx="60" cy="80" rx="25" ry="11" fill="${D}" stroke="${L}" stroke-width="6"/><rect x="43" y="71" width="34" height="5" rx="2" fill="${W}"/>`;break;
+  case 'i':m=`<ellipse cx="60" cy="80" rx="29" ry="6" fill="${D}" stroke="${L}" stroke-width="6"/><rect x="38" y="76" width="44" height="4" rx="2" fill="${W}"/>`;break;
+  case 'o':m=`<ellipse cx="60" cy="82" rx="14" ry="16" fill="${D}" stroke="${L}" stroke-width="8"/>`;break;
+  case 'u':m=`<ellipse cx="60" cy="82" rx="7" ry="8" fill="${D}" stroke="${L}" stroke-width="11"/>`;break;
+  case 'm':m=`<path d="M38 80 Q60 74 82 80" stroke="${L}" stroke-width="9" fill="none" stroke-linecap="round"/>`;break;
+  case 'p':m=`<circle cx="30" cy="74" r="12" fill="#ffb3a7"/><circle cx="90" cy="74" r="12" fill="#ffb3a7"/><path d="M44 80 Q60 75 76 80" stroke="${L}" stroke-width="10" fill="none" stroke-linecap="round"/>`;break;
+  case 'l':m=`<ellipse cx="60" cy="80" rx="19" ry="15" fill="${D}" stroke="${L}" stroke-width="6"/><ellipse cx="60" cy="70" rx="7" ry="5" fill="${G}"/>`;break;
+  case 's':m=`<ellipse cx="60" cy="80" rx="25" ry="8" fill="${D}" stroke="${L}" stroke-width="6"/><rect x="41" y="74" width="38" height="5" fill="${W}"/><rect x="41" y="81" width="38" height="5" fill="${W}"/>`;break;
+  case 't':m=`<ellipse cx="60" cy="80" rx="19" ry="10" fill="${D}" stroke="${L}" stroke-width="6"/><rect x="45" y="71" width="30" height="4" fill="${W}"/><ellipse cx="60" cy="78" rx="8" ry="3.5" fill="${G}"/>`;break;
+ }
+ return `<div class="mouth"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="#ffd9b8"/><circle cx="42" cy="44" r="5" fill="#2a2140"/><circle cx="78" cy="44" r="5" fill="#2a2140"/><path d="M57 56 Q60 62 63 56" stroke="#d99a7a" stroke-width="3" fill="none"/>${m}</svg>${HINT[k]||''}</div>`;
+}
+function mouthsFor(syl){const s=plain(syl);if(s.length===1)return mouth(s);return mouth(s[0])+'<span class="arrow">➜</span>'+mouth(s[s.length-1])}
+
+/* ===================== MAPA ===================== */
+const unlocked=i=>P.unlockAll||i===0||(P.stars[LEVELS[i-1].id]||0)>0;
+function renderMap(){
+ let firstOpen=LEVELS.findIndex((L,i)=>unlocked(i)&&!P.stars[L.id]);
+ $('mapList').innerHTML=LEVELS.map((L,i)=>{
+  const st=P.stars[L.id]||0,lk=!unlocked(i);
+  return `<div class="node"><button class="lvl ${lk?'lock':st?'done':''}" data-lvl="${i}">${lk?'🔒':L.icon}<small>${'★'.repeat(st)}${'☆'.repeat(lk?0:3-st)}</small></button><div class="nlabel">${L.name}</div>${i===firstOpen?'<div class="chispa">🐉</div>':''}</div>`}).join('');
+}
+$('mapList').addEventListener('click',e=>{const b=e.target.closest('[data-lvl]');if(!b)return;const i=+b.dataset.lvl;if(!unlocked(i)){sayFx('fx:otra');return}startLevel(i)});
+
+/* ===================== SESIÓN ===================== */
+let S=null;
+function startLevel(i){
+ const L=LEVELS[i];
+ S={i,L,phase:'intro',k:0,r:0,errors:0,lock:false,rounds:buildRounds(L)};
+ show('play');render();
+}
+function buildRounds(L){
+ const out=[],n=8;let last=null;
+ const kinds=L.type==='sonidos'?['listen']:L.type==='frases'?['read']:['read','listen'];
+ for(let i=0;i<n;i++){
+  let t;do{t=L.items[Math.floor(Math.random()*L.items.length)]}while(L.items.length>1&&t===last);last=t;
+  const kind=kinds[i%kinds.length];
+  const others=shuffle(L.items.filter(x=>x!==t)).slice(0,(L.opts||3)-1);
+  out.push({t,kind,opts:shuffle([t,...others])});
+ }
+ return out;
+}
+function setProg(){const tot=S.L.items.length+S.rounds.length;const done=S.phase==='intro'?S.k:S.phase==='round'?S.L.items.length+S.r:tot;$('progFill').style.width=(100*done/tot)+'%'}
+function render(){
+ setProg();
+ const st=$('stage'),L=S.L;
+ if(S.phase==='intro'){
+  const it=L.items[S.k],last=S.k===L.items.length-1;
+  let h='';
+  if(L.type==='sonidos'){
+   const txt=L.id==='vocales'?`<span class="print">${it.w.toUpperCase()}</span> <span class="ligada">${it.w}</span>`:T(it.w);
+   h=`<button class="big" data-say="${it.w}">${txt}</button><div class="mouths">${mouthsFor(it.w)}</div>`;
+  }else if(L.type==='palabras'){
+   h=`<div class="emoji">${it.e}</div><div class="row">${it.s.map((s,j)=>`<button class="chip" data-syl="${j}">${T(s)}</button>`).join('')}</div>
+      <button class="big sm" data-say="${it.w}">${T(it.w)}</button><div class="mouths" id="mz"></div>`;
+  }else{
+   h=`<div class="emoji">${it.e}</div><div class="row">${it.w.split(' ').map(p=>`<button class="chip" data-say="${p}">${T(p)}</button>`).join('')}</div>
+      <button class="btn alt" data-say="${it.w}">🔊 Toda la frase</button>`;
+  }
+  h+=`<div class="row"><button class="btn alt" data-say="${it.w}">🔊</button><button class="btn" data-act="next">${last?'¡A jugar! 🎮':'Siguiente ➜'}</button></div><div class="count">${S.k+1} / ${L.items.length}</div>`;
+  st.innerHTML=h;
+  setTimeout(()=>say(it.w),300);
+ }else if(S.phase==='round'){
+  const R=S.rounds[S.r];S.lock=false;S.re=0;
+  if(R.kind==='listen'){
+   st.innerHTML=`<button class="ear" data-act="replay">🔊</button><div class="opts">${R.opts.map((o,j)=>`<button class="opt" data-opt="${j}">${T(o.w)}</button>`).join('')}</div>`;
+   setTimeout(()=>say(R.t.w),400);
+  }else{
+   st.innerHTML=`<div class="big ${R.t.w.length>4?'sm':''}">${T(R.t.w)}</div><div class="count">📖 ¿Cuál es el dibujo?</div><div class="opts">${R.opts.map((o,j)=>`<button class="opt emo" data-opt="${j}">${o.e}</button>`).join('')}</div>`;
+  }
+ }else{
+  const stars=S.errors<=1?3:S.errors<=3?2:1;
+  P.stars[L.id]=Math.max(P.stars[L.id]||0,stars);save();
+  st.innerHTML=`<div class="chispa" style="font-size:120px">🐉</div><div class="stars">${'⭐'.repeat(stars)}</div>
+   <div class="row"><button class="btn alt" data-act="again">🔁 Otra vez</button><button class="btn" data-act="map">🗺️ Al mapa</button></div>`;
+  party(24);sayFx('fx:fin');
+ }
+}
+$('stage').addEventListener('click',async e=>{
+ const b=e.target.closest('button');if(!b||!S)return;
+ const L=S.L;
+ if(b.dataset.say){b.classList.add('lit');await say(b.dataset.say);b.classList.remove('lit');return}
+ if(b.dataset.syl!==undefined){const s=L.items[S.k].s[+b.dataset.syl];$('mz').innerHTML=mouthsFor(s);b.classList.add('lit');await say(s);b.classList.remove('lit');return}
+ const a=b.dataset.act;
+ if(a==='next'){stopAll();if(S.k<L.items.length-1)S.k++;else S.phase='round';render();return}
+ if(a==='replay'){say(S.rounds[S.r].t.w);return}
+ if(a==='again'){startLevel(S.i);return}
+ if(a==='map'){goMap();return}
+ if(b.dataset.opt!==undefined&&!S.lock){
+  const R=S.rounds[S.r],o=R.opts[+b.dataset.opt];
+  if(o===R.t){
+   S.lock=true;b.classList.add('ok');party(10);
+   if(R.kind==='read')await say(R.t.w);
+   await praise();
+   S.r++;if(S.r>=S.rounds.length)S.phase='done';render();
+  }else{
+   S.errors++;S.re++;b.classList.add('bad');setTimeout(()=>b.classList.add('off'),400);
+   await sayFx('fx:otra');
+   if(R.kind==='listen'||S.re>=2)say(R.t.w);
+  }
+ }
+});
+function goMap(){stopAll();mirrorOff();S=null;renderMap();show('map')}
+$('back').onclick=goMap;
+
+function party(n){const p=$('party');const em=['⭐','✨','🔥','💜','🌟'];for(let i=0;i<n;i++){const s=document.createElement('span');s.textContent=em[i%em.length];s.style.setProperty('--x',(Math.random()*600-300)+'px');s.style.setProperty('--y',(Math.random()*600-300)+'px');p.appendChild(s);setTimeout(()=>s.remove(),1200)}}
+
+/* ===================== ESPEJO ===================== */
+let camStream=null;
+async function mirrorOn(){try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});$('mirror').srcObject=camStream;$('mirror').classList.add('on');$('mirrorBtn').classList.add('on')}catch(e){alert('No se puede abrir la cámara.')}}
+function mirrorOff(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}$('mirror').classList.remove('on');$('mirrorBtn').classList.remove('on')}
+$('mirrorBtn').onclick=()=>camStream?mirrorOff():mirrorOn();
+
+/* ===================== ZONA ADULTOS ===================== */
+let holdT=null;const gear=$('gear');
+gear.addEventListener('pointerdown',()=>{gear.classList.add('hold');holdT=setTimeout(()=>{gear.classList.remove('hold');openAdult()},1500)});
+['pointerup','pointerleave','pointercancel'].forEach(ev=>gear.addEventListener(ev,()=>{clearTimeout(holdT);gear.classList.remove('hold')}));
+
+function allKeys(){
+ const groups=LEVELS.map(L=>{const ks=[];L.items.forEach(it=>{ks.push(it.w);if(it.s)it.s.forEach(s=>ks.push(s));if(L.type==='frases')it.w.split(' ').forEach(p=>ks.push(p))});return [L.name,[...new Set(ks)]]});
+ const seen=new Set();groups.forEach(g=>{g[1]=g[1].filter(k=>!seen.has(k)&&seen.add(k))});
+ groups.push(['Frases de ánimo',Object.keys(FX)]);
+ return groups.filter(g=>g[1].length);
+}
+let mr=null,recKey=null,recTimer=null;
+function renderAdult(){
+ const lbl=k=>FX[k]||k;
+ $('adultBody').innerHTML=`
+ <h3>Letra</h3><div class="box seg">
+  <button data-mode="upper" class="${P.mode==='upper'?'on':''}">MAYÚSCULAS (imprenta)</button>
+  <button data-mode="lower" class="${P.mode==='lower'?'on':''}" style="font-family:'Dancing Script';font-size:24px">minúsculas ligadas</button></div>
+ <h3>Voz</h3><div class="box seg">
+  ${[0.6,0.7,0.8,0.9].map(r=>`<button data-rate="${r}" class="${P.rate===r?'on':''}">${r===0.6?'Muy lenta':r===0.7?'Lenta':r===0.8?'Normal':'Rápida'}</button>`).join('')}
+  <button data-test="1">🔊 Probar</button></div>
+ <h3>Niveles</h3><div class="box seg">
+  <button data-unlock="1" class="${P.unlockAll?'on':''}">${P.unlockAll?'🔓 Todos abiertos':'🔒 Abrir todos'}</button>
+  <button data-reset="1">Borrar progreso</button></div>
+ <h3>Grabar tu voz</h3>
+ <p class="note">Si grabas una sílaba o palabra, la app usará tu voz por encima de los audios del repositorio (carpeta audio/) y de la voz del iPad. Pulsa ● para grabar y ■ para parar (corta sola a los 4 s). Las grabaciones se quedan solo en este dispositivo.</p>
+ ${allKeys().map(([n,ks])=>`<div class="box"><b>${n}</b>${ks.map(k=>`<div class="rec"><b>${lbl(k)}</b>${REC[k]?'<span class="has">✔ tu voz</span>':''}
+   <button class="r ${recKey===k?'live':''}" data-rec="${k}">${recKey===k?'■':'●'}</button>
+   <button data-play="${k}">▶</button>${REC[k]?`<button data-del="${k}">🗑</button>`:''}</div>`).join('')}</div>`).join('')}
+ <p class="note">Hecho con cariño para Claudia ❤️</p>`;
+}
+function openAdult(){stopAll();renderAdult();show('adult')}
+$('adultClose').onclick=()=>{if(mr&&mr.state==='recording')mr.stop();renderMap();show('map')};
+$('adultBody').addEventListener('click',async e=>{
+ const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+ if(d.mode){P.mode=d.mode;save();renderAdult()}
+ else if(d.rate){P.rate=+d.rate;save();renderAdult()}
+ else if(d.test){speak('ma, me, mi, mo, mu. Mamá.')}
+ else if(d.unlock){P.unlockAll=!P.unlockAll;save();renderAdult()}
+ else if(d.reset){if(confirm('¿Borrar todas las estrellas?')){P.stars={};save();renderAdult()}}
+ else if(d.play){say(d.play,FX[d.play])}
+ else if(d.del){await DB.del(d.del);URL.revokeObjectURL(REC[d.del]);delete REC[d.del];renderAdult()}
+ else if(d.rec){if(recKey===d.rec){mr&&mr.stop()}else if(!recKey){startRec(d.rec)}}
+});
+async function startRec(key){
+ let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){alert('No puedo usar el micrófono. Revisa los permisos del navegador.');return}
+ const mime=['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m));
+ const chunks=[];mr=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);recKey=key;
+ mr.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+ mr.onstop=async()=>{clearTimeout(recTimer);stream.getTracks().forEach(t=>t.stop());
+  const blob=new Blob(chunks,{type:mr.mimeType||'audio/mp4'});
+  if(blob.size>0){await DB.put(key,blob);if(REC[key])URL.revokeObjectURL(REC[key]);REC[key]=URL.createObjectURL(blob)}
+  recKey=null;mr=null;renderAdult()};
+ mr.start();recTimer=setTimeout(()=>{if(mr&&mr.state==='recording')mr.stop()},4000);renderAdult();
+}
+
+/* ===================== ARRANQUE ===================== */
+(async()=>{await DB.open();const all=await DB.all();for(const k in all)REC[k]=URL.createObjectURL(all[k]);renderMap()})();
+document.addEventListener('gesturestart',e=>e.preventDefault());
+</script>
+</body>
+</html>
